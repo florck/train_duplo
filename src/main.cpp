@@ -127,8 +127,8 @@ void loop() {
 
     // if connected, you can set the name of the hub, the LED color and shut it down
     if (myTrainHub.isConnected()) {
-        const int position_speed = analogRead(32);
-        const int actual_speed = convertPotPositionToSpeed(position_speed);
+        const auto position_speed = static_cast<int16_t>(analogRead(32));
+        const int16_t actual_speed = convertPotPositionToSpeed(position_speed);
         Serial.println("Analog reading");
         Serial.println(position_speed);
         Serial.println(actual_speed);
