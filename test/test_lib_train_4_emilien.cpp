@@ -4,30 +4,29 @@
 #include <unity.h>
 #include "lib_train_4_emilien_native.h" // Include the header file
 
-void testconvertPotPositionToSpeedMax() {
+void testConvert11SpeedMax() {
     TEST_ASSERT_EQUAL(77, ::convertPotPositionToSpeed(4095));
 }
 
-void testconvertPotPositionToSpeedMin() {
-    const int actual = ::convertPotPositionToSpeed(0);
-    TEST_ASSERT_EQUAL(-77, actual);
+void testConvert11SpeedMin() {
+    TEST_ASSERT_EQUAL(-77, ::convertPotPositionToSpeed(0));
 }
 
-void testconvertPotPositionToSpeedMid() {
+void testConvert11SpeedMid() {
     TEST_ASSERT_EQUAL(0, ::convertPotPositionToSpeed(2047));
 }
 
 
-int runUnityTests() {
+uint8_t runUnityTests() {
     UNITY_BEGIN();
-    RUN_TEST(testconvertPotPositionToSpeedMax);
-    RUN_TEST(testconvertPotPositionToSpeedMin);
-    RUN_TEST(testconvertPotPositionToSpeedMid);
+    RUN_TEST(::testConvert11SpeedMax);
+    RUN_TEST(::testConvert11SpeedMin);
+    RUN_TEST(::testConvert11SpeedMid);
     return UNITY_END();
 }
 
 void setup() {
-    runUnityTests();
+    ::runUnityTests();
 }
 
 void loop() {
@@ -35,5 +34,5 @@ void loop() {
 }
 
 int main() {
-    return runUnityTests();
+    return ::runUnityTests();
 }

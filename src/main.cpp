@@ -6,9 +6,12 @@
 
 
 // Define the GPIO pin connected to the button
-constexpr int8_t buttonPin = 18;
-constexpr int8_t ledPin = 19; // GPIO for the LED
-constexpr int8_t potentiometerPin = 32;
+constexpr uint8_t buttonPin = 18;
+
+// GPIO for the LED
+constexpr uint8_t ledPin = 19;
+
+constexpr uint8_t potentiometerPin = 32;
 constexpr byte motorPort = static_cast<byte>(DuploTrainHubPort::MOTOR);
 
 
@@ -20,19 +23,16 @@ void hubPropertyChangeCallback(void *hub, HubPropertyReference hubProperty, uint
     if (hubProperty == HubPropertyReference::RSSI) {
         Serial.print("RSSI: ");
         Serial.println(myHub->parseRssi(pData), DEC);
-        return;
     }
 
     if (hubProperty == HubPropertyReference::BATTERY_VOLTAGE) {
         Serial.print("BatteryLevel: ");
         Serial.println(myHub->parseBatteryLevel(pData), DEC);
-        return;
     }
 
     if (hubProperty == HubPropertyReference::BUTTON) {
         Serial.print("Button: ");
         Serial.println(static_cast<byte>(myHub->parseHubButton(pData)), HEX);
-        return;
     }
 }
 
@@ -53,9 +53,8 @@ void oldLoop() {
 
     // Variable to store the button state
     // Read the state of the button
-    if (!myTrainHub.isConnected() && !myTrainHub.isConnecting()) {
+    if ((!myTrainHub.isConnected()) && (!myTrainHub.isConnecting())) {
         myTrainHub.init(); // initialize the PoweredUpHub instance
-        //myTrainHub.init("90:84:2b:03:19:7f"); //example of initializing a hub with a specific address
     }
 
     // connect flow. Search for BLE services and try to connect if the uuid of the hub is found
@@ -67,7 +66,8 @@ void oldLoop() {
             Serial.println(myTrainHub.getHubAddress().toString().c_str());
             Serial.print("Hub name: ");
             Serial.println(myTrainHub.getHubName().c_str());
-            myTrainHub.activateHubPropertyUpdate(HubPropertyReference::BATTERY_VOLTAGE, hubPropertyChangeCallback);
+            myTrainHub.activateHubPropertyUpdate(HubPropertyReference::BATTERY_VOLTAGE,
+                                                 hubPropertyChangeCallback);
         } else {
             Serial.println("Failed to connect to HUB");
         }
@@ -75,23 +75,23 @@ void oldLoop() {
 
     // if connected, you can set the name of the hub, the LED color and shut it down
     if (myTrainHub.isConnected()) {
-        int buttonState = 0;
+        uint8_t buttonState = 0;
 
 
         //char hubName[] = "myTrainHub";
         //myTrainHub.setHubName(hubName);
         // Check if the button is pressed (LOW because of pull-up)
-        buttonState = digitalRead(::buttonPin);
+        buttonState = ::digitalRead(::buttonPin);
         if (buttonState == LOW) {
             // Print message to the serial monitor
             Serial.println("Button pressed!");
-            digitalWrite(::ledPin, HIGH);
+            ::digitalWrite(::ledPin, HIGH);
             Serial.println("Button pressed! LED on.");
 
             playAllSounds(&myTrainHub);
             myTrainHub.shutDownHub();
 
-            digitalWrite(::ledPin, LOW);
+            ::digitalWrite(::ledPin, LOW);
         }
     } else {
         Serial.println("Train hub is disconnected");
@@ -101,12 +101,12 @@ void oldLoop() {
 
 void loop() {
     static Lpf2Hub myTrainHub;
-    static int currentSpeed;
+    static int16_t currentSpeed = 2048;
     static bool emergencyStop = true;
 
-    if (!myTrainHub.isConnected() && !myTrainHub.isConnecting()) {
-        myTrainHub.init(); // initialize the PoweredUpHub instance
-        //myTrainHub.init("90:84:2b:03:19:7f"); //example of initializing a hub with a specific address
+    if ((!myTrainHub.isConnected()) && (!myTrainHub.isConnecting())) {
+        // initialize the PoweredUpHub instance
+        myTrainHub.init();
     }
 
     // connect flow. Search for BLE services and try to connect if the uuid of the hub is found
@@ -118,7 +118,9 @@ void loop() {
             Serial.println(myTrainHub.getHubAddress().toString().c_str());
             Serial.print("Hub name: ");
             Serial.println(myTrainHub.getHubName().c_str());
-            myTrainHub.activateHubPropertyUpdate(HubPropertyReference::BATTERY_VOLTAGE, hubPropertyChangeCallback);
+            myTrainHub.activateHubPropertyUpdate(
+                HubPropertyReference::BATTERY_VOLTAGE,
+                hubPropertyChangeCallback);
         } else {
             Serial.println("Failed to connect to HUB");
         }
@@ -126,36 +128,36 @@ void loop() {
 
     // if connected, you can set the name of the hub, the LED color and shut it down
     if (myTrainHub.isConnected()) {
-        const auto position_speed = static_cast<int16_t>(analogRead(::potentiometerPin));
+        const auto position_speed = static_cast<int16_t>(::analogRead(::potentiometerPin));
         const int16_t actual_speed = ::convertPotPositionToSpeed(position_speed);
         Serial.println("Analog reading");
         Serial.println(position_speed);
         Serial.println(actual_speed);
-        if (emergencyStop && actual_speed == 0) {
+        if (emergencyStop && (actual_speed == 0)) {
             emergencyStop = false;
         }
-        if (!emergencyStop && !(currentSpeed == 0 && actual_speed == 0)) {
+        if ((!emergencyStop) && !((currentSpeed == 0) && (actual_speed == 0))) {
             currentSpeed = actual_speed;
             myTrainHub.setBasicMotorSpeed(motorPort, actual_speed);
         }
 
-        const int buttonState = digitalRead(::buttonPin);
+        const uint8_t buttonState = digitalRead(::buttonPin);
         if (buttonState == LOW) {
             // Print message to the serial monitor
             Serial.println("Button pressed!");
-            digitalWrite(::ledPin, HIGH);
+            ::digitalWrite(::ledPin, HIGH);
             Serial.println("Button pressed! LED on.");
 
             emergencyStop = true;
 
-            digitalWrite(::ledPin, LOW);
+            ::digitalWrite(::ledPin, LOW);
         }
         if (emergencyStop) {
             Serial.println("LED on.");
-            digitalWrite(::ledPin, HIGH);
+            ::digitalWrite(::ledPin, HIGH);
         } else {
             Serial.println("LED off.");
-            digitalWrite(::ledPin, LOW);
+            ::digitalWrite(::ledPin, LOW);
         }
 
         delay(100);
