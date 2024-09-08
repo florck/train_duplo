@@ -54,7 +54,8 @@ void oldLoop() {
     // Variable to store the button state
     // Read the state of the button
     if ((!myTrainHub.isConnected()) && (!myTrainHub.isConnecting())) {
-        myTrainHub.init(); // initialize the PoweredUpHub instance
+        // initialize the PoweredUpHub instance
+        myTrainHub.init();
     }
 
     // connect flow. Search for BLE services and try to connect if the uuid of the hub is found
@@ -136,12 +137,12 @@ void loop() {
         if (emergencyStop && (actual_speed == 0)) {
             emergencyStop = false;
         }
-        if ((!emergencyStop) && !((currentSpeed == 0) && (actual_speed == 0))) {
+        if ((!emergencyStop) && (!((currentSpeed == 0) && (actual_speed == 0)))) {
             currentSpeed = actual_speed;
             myTrainHub.setBasicMotorSpeed(motorPort, actual_speed);
         }
 
-        const uint8_t buttonState = digitalRead(::buttonPin);
+        const uint8_t buttonState = ::digitalRead(::buttonPin);
         if (buttonState == LOW) {
             // Print message to the serial monitor
             Serial.println("Button pressed!");
@@ -160,7 +161,7 @@ void loop() {
             ::digitalWrite(::ledPin, LOW);
         }
 
-        delay(100);
+        ::delay(100);
     } else {
         Serial.println("Train hub is disconnected");
     }
