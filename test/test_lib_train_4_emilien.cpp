@@ -5,16 +5,16 @@
 #include "lib_train_4_emilien_native.h" // Include the header file
 
 void testconvertPotPositionToSpeedMax() {
-    TEST_ASSERT_EQUAL(77, convertPotPositionToSpeed(4095));
+    TEST_ASSERT_EQUAL(77, ::convertPotPositionToSpeed(4095));
 }
 
 void testconvertPotPositionToSpeedMin() {
-    const int actual = convertPotPositionToSpeed(0);
+    const int actual = ::convertPotPositionToSpeed(0);
     TEST_ASSERT_EQUAL(-77, actual);
 }
 
 void testconvertPotPositionToSpeedMid() {
-    TEST_ASSERT_EQUAL(0, convertPotPositionToSpeed(2047));
+    TEST_ASSERT_EQUAL(0, ::convertPotPositionToSpeed(2047));
 }
 
 

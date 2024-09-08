@@ -4,12 +4,11 @@
 #include "lib_train_4_emilien.h"
 #include "lib_train_4_emilien_native.h"
 
-// create a hub instance
-constexpr byte port = static_cast<byte>(PoweredUpHubPort::A);
+
 // Define the GPIO pin connected to the button
-constexpr int buttonPin = 18;
-constexpr int ledPin = 19; // GPIO for the LED
-constexpr int potentiometerPin = 32;
+constexpr int8_t buttonPin = 18;
+constexpr int8_t ledPin = 19; // GPIO for the LED
+constexpr int8_t potentiometerPin = 32;
 constexpr byte motorPort = static_cast<byte>(DuploTrainHubPort::MOTOR);
 
 
@@ -41,15 +40,15 @@ void setup() {
     Serial.begin(115200);
     analogReadResolution(12);
     // Configure the button pin as input with internal pull-up resistor
-    pinMode(::buttonPin, INPUT_PULLUP);
+    ::pinMode(::buttonPin, INPUT_PULLUP);
     // Configure the LED pin as output
-    pinMode(::ledPin, OUTPUT);
+    ::pinMode(::ledPin, OUTPUT);
     // Ensure the LED is off initially
-    digitalWrite(::ledPin, LOW);
+    ::digitalWrite(::ledPin, LOW);
 }
 
 
-void old_loop() {
+void oldLoop() {
     static Lpf2Hub myTrainHub;
 
     // Variable to store the button state
@@ -127,8 +126,8 @@ void loop() {
 
     // if connected, you can set the name of the hub, the LED color and shut it down
     if (myTrainHub.isConnected()) {
-        const auto position_speed = static_cast<int16_t>(analogRead(32));
-        const int16_t actual_speed = convertPotPositionToSpeed(position_speed);
+        const auto position_speed = static_cast<int16_t>(analogRead(::potentiometerPin));
+        const int16_t actual_speed = ::convertPotPositionToSpeed(position_speed);
         Serial.println("Analog reading");
         Serial.println(position_speed);
         Serial.println(actual_speed);
