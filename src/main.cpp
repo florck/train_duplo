@@ -41,11 +41,11 @@ void setup() {
     Serial.begin(115200);
     analogReadResolution(12);
     // Configure the button pin as input with internal pull-up resistor
-    pinMode(buttonPin, INPUT_PULLUP);
+    pinMode(::buttonPin, INPUT_PULLUP);
     // Configure the LED pin as output
-    pinMode(ledPin, OUTPUT);
+    pinMode(::ledPin, OUTPUT);
     // Ensure the LED is off initially
-    digitalWrite(ledPin, LOW);
+    digitalWrite(::ledPin, LOW);
 }
 
 
@@ -82,17 +82,17 @@ void old_loop() {
         //char hubName[] = "myTrainHub";
         //myTrainHub.setHubName(hubName);
         // Check if the button is pressed (LOW because of pull-up)
-        buttonState = digitalRead(buttonPin);
+        buttonState = digitalRead(::buttonPin);
         if (buttonState == LOW) {
             // Print message to the serial monitor
             Serial.println("Button pressed!");
-            digitalWrite(ledPin, HIGH);
+            digitalWrite(::ledPin, HIGH);
             Serial.println("Button pressed! LED on.");
 
             playAllSounds(&myTrainHub);
             myTrainHub.shutDownHub();
 
-            digitalWrite(ledPin, LOW);
+            digitalWrite(::ledPin, LOW);
         }
     } else {
         Serial.println("Train hub is disconnected");
@@ -140,23 +140,23 @@ void loop() {
             myTrainHub.setBasicMotorSpeed(motorPort, actual_speed);
         }
 
-        const int buttonState = digitalRead(buttonPin);
+        const int buttonState = digitalRead(::buttonPin);
         if (buttonState == LOW) {
             // Print message to the serial monitor
             Serial.println("Button pressed!");
-            digitalWrite(ledPin, HIGH);
+            digitalWrite(::ledPin, HIGH);
             Serial.println("Button pressed! LED on.");
 
             emergencyStop = true;
 
-            digitalWrite(ledPin, LOW);
+            digitalWrite(::ledPin, LOW);
         }
         if (emergencyStop) {
             Serial.println("LED on.");
-            digitalWrite(ledPin, HIGH);
+            digitalWrite(::ledPin, HIGH);
         } else {
             Serial.println("LED off.");
-            digitalWrite(ledPin, LOW);
+            digitalWrite(::ledPin, LOW);
         }
 
         delay(100);
