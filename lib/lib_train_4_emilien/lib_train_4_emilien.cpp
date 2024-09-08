@@ -11,7 +11,7 @@
 #include "lib_train_4_emilien_native.h"
 
 
-constexpr byte idToSound[5]{
+constexpr std::array<byte, 5> idToSound{
     static_cast<byte>(DuploTrainBaseSound::BRAKE),
     static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE),
     static_cast<byte>(DuploTrainBaseSound::WATER_REFILL),
@@ -24,25 +24,25 @@ void controlSounds(Lpf2Hub *myTrainHub, const uint8_t nextSoundButtonState,
                    const uint8_t nextSoundButtonLedPin, uint8_t previousSoundButtonState,
                    uint8_t previousSoundButtonLedPin, std::atomic<bool> &sendingOrderFlag) {
     //This is a loop ready function that uses static to navigate between the states.
-    static int currentSound = 0;
+    static uint8_t currentSound = 0;
     static bool currentlyPlaying = false;
     static bool notYetPlayed = false;
-    static unsigned long playStartTime = 0;
+    static unsigned long playStartTime = 0.;
     static uint8_t actionedButtonLedPin = 0;
     bool asChanged = false;
-    if (nextSoundButtonState == LOW && (!currentlyPlaying) && (!notYetPlayed)) {
+    if ((nextSoundButtonState == LOW) && (!currentlyPlaying) && (!notYetPlayed)) {
         Serial.println("Detected a click on next.");
         asChanged = true;
-        currentSound++;
+        ++currentSound;
         if (currentSound > 4) {
             currentSound = 0;
         }
         actionedButtonLedPin = nextSoundButtonLedPin;
     }
-    if (previousSoundButtonState == LOW && (!currentlyPlaying) && (!notYetPlayed)) {
+    if ((previousSoundButtonState == LOW) && (!currentlyPlaying) && (!notYetPlayed)) {
         Serial.println("Detected a click on previous.");
         asChanged = true;
-        currentSound--;
+        --currentSound;
         if (currentSound < 0) {
             currentSound = 4;
         }
@@ -51,7 +51,7 @@ void controlSounds(Lpf2Hub *myTrainHub, const uint8_t nextSoundButtonState,
     if (asChanged) {
         currentlyPlaying = true;
         notYetPlayed = true;
-        playStartTime = millis();
+        playStartTime = ::millis();
         ::digitalWrite(actionedButtonLedPin, HIGH);
 
         while (sendingOrderFlag.load()) {
@@ -63,21 +63,21 @@ void controlSounds(Lpf2Hub *myTrainHub, const uint8_t nextSoundButtonState,
         myTrainHub->WriteValue(setToneMode, 8);
         Serial.println("Start unable period");
     }
-    if (currentlyPlaying && notYetPlayed && (millis() - playStartTime >= 200)) {
+    if (currentlyPlaying && notYetPlayed && ((::millis() - playStartTime) >= 200)) {
         notYetPlayed = false;
-        playStartTime = millis();
+        playStartTime = ::millis();
         Serial.println("Play the actual sound.");
         byte playSound[6] = {0x81, 0x01, 0x11, 0x51, 0x01, idToSound[currentSound]};
         myTrainHub->WriteValue(playSound, 6);
     }
-    if (currentlyPlaying && (!notYetPlayed) && (millis() - playStartTime >= 200) &&
+    if (currentlyPlaying && (!notYetPlayed) && ((::millis() - playStartTime) >= 200) &&
         sendingOrderFlag.load()) {
         sendingOrderFlag.store(false);
     }
-    if (currentlyPlaying && (!notYetPlayed) && (millis() - playStartTime >= 1000)) {
+    if (currentlyPlaying && (!notYetPlayed) && ((::millis() - playStartTime) >= 1000)) {
         Serial.println("End unable period.");
         ::digitalWrite(actionedButtonLedPin, LOW);
-        currentlyPlaying = false; // Reset currentlyPlaying after 1 second
+        currentlyPlaying = false;
     }
 }
 
@@ -86,8 +86,7 @@ void controlMotor(Lpf2Hub *myTrainHub, const int16_t positionSpeed,
                   const byte motorPort, std::atomic<bool> &sendingOrderFlag) {
     static int16_t currentSpeed = 2048;
     static bool emergencyStop = true;
-    static unsigned long lastExecutionTime = 0; // To track the last execution time
-    unsigned long currentTime = millis(); // Get the current time
+
     if (!sendingOrderFlag.load()) {
         sendingOrderFlag.store(true);
         const int16_t actualSpeed = ::convertPotPositionToSpeed(positionSpeed);
@@ -152,102 +151,102 @@ void hubPropertyChangeCallback(void *hub, HubPropertyReference hubProperty, uint
 }
 
 void playAllTones(Lpf2Hub *myTrainHub) {
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x0a);
     Serial.println(0x0a);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x0a);
     Serial.println(0x0a);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x09);
     Serial.println(0X09);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x09);
     Serial.println(0X09);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x08);
     Serial.println(static_cast<byte>(8));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x08);
     Serial.println(static_cast<byte>(8));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x07);
     Serial.println(0x07);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x07);
     Serial.println(0x07);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x06);
     Serial.println(0x06);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x06);
     Serial.println(0x06);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x05);
     Serial.println(0x05);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x05);
     Serial.println(0x05);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x04);
     Serial.println(0x04);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x04);
     Serial.println(0x04);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x03);
     Serial.println(0x03);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x03);
     Serial.println(0x03);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x02);
     Serial.println(0x02);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x02);
     Serial.println(0x02);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x01);
     Serial.println(0x01);
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playTone(0x01);
     Serial.println(0x01);
     Serial.println("Tone10!");
     // Optional: Add a small delay to debounce the button
-    delay(1000);
+    ::delay(1000);
 }
 
 
 void playAllSounds(Lpf2Hub *myTrainHub) {
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::BRAKE));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::BRAKE));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::BRAKE));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::BRAKE));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::WATER_REFILL));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::WATER_REFILL));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::WATER_REFILL));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::WATER_REFILL));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::HORN));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::HORN));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::HORN));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::HORN));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::STEAM));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::STEAM));
-    delay(1000);
+    ::delay(1000);
     myTrainHub->playSound(static_cast<byte>(DuploTrainBaseSound::STEAM));
     Serial.println(static_cast<byte>(DuploTrainBaseSound::STEAM));
-    delay(1000);
+    ::delay(1000);
 }
