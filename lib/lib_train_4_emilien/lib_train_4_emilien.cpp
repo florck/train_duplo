@@ -1,48 +1,121 @@
 //
 // Created by Florian Thöni on 07/09/2024.
 //
+#include <cstdint>
 #include <cmath>
+#include <Arduino.h>
+
 #include "Lpf2Hub.h"
 
 #include "lib_train_4_emilien.h"
 #include "lib_train_4_emilien_native.h"
 
+
+constexpr byte idToSound[5]{
+    static_cast<byte>(DuploTrainBaseSound::BRAKE),
+    static_cast<byte>(DuploTrainBaseSound::STATION_DEPARTURE),
+    static_cast<byte>(DuploTrainBaseSound::WATER_REFILL),
+    static_cast<byte>(DuploTrainBaseSound::HORN),
+    static_cast<byte>(DuploTrainBaseSound::STEAM)
+};
+
+
+void controlSounds(Lpf2Hub *myTrainHub, const uint8_t nextSoundButtonState,
+                   const uint8_t nextSoundButtonLedPin, uint8_t previousSoundButtonState,
+                   uint8_t previousSoundButtonLedPin, std::atomic<bool> &sendingOrderFlag) {
+    //This is a loop ready function that uses static to navigate between the states.
+    static int currentSound = 0;
+    static bool currentlyPlaying = false;
+    static bool notYetPlayed = false;
+    static unsigned long playStartTime = 0;
+    static uint8_t actionedButtonLedPin = 0;
+    bool asChanged = false;
+    if (nextSoundButtonState == LOW && (!currentlyPlaying) && (!notYetPlayed)) {
+        Serial.println("Detected a click on next.");
+        asChanged = true;
+        currentSound++;
+        if (currentSound > 4) {
+            currentSound = 0;
+        }
+        actionedButtonLedPin = nextSoundButtonLedPin;
+    }
+    if (previousSoundButtonState == LOW && (!currentlyPlaying) && (!notYetPlayed)) {
+        Serial.println("Detected a click on previous.");
+        asChanged = true;
+        currentSound--;
+        if (currentSound < 0) {
+            currentSound = 4;
+        }
+        actionedButtonLedPin = previousSoundButtonLedPin;
+    }
+    if (asChanged) {
+        currentlyPlaying = true;
+        notYetPlayed = true;
+        playStartTime = millis();
+        ::digitalWrite(actionedButtonLedPin, HIGH);
+
+        while (sendingOrderFlag.load()) {
+            Serial.println("Waiting for the flag to be ready.");
+        }
+        sendingOrderFlag.store(true);
+        Serial.println(currentSound);
+        byte setToneMode[8] = {0x41, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x01};
+        myTrainHub->WriteValue(setToneMode, 8);
+        Serial.println("Start unable period");
+    }
+    if (currentlyPlaying && notYetPlayed && (millis() - playStartTime >= 200)) {
+        notYetPlayed = false;
+        playStartTime = millis();
+        Serial.println("Play the actual sound.");
+        byte playSound[6] = {0x81, 0x01, 0x11, 0x51, 0x01, idToSound[currentSound]};
+        myTrainHub->WriteValue(playSound, 6);
+    }
+    if (currentlyPlaying && (!notYetPlayed) && (millis() - playStartTime >= 200) &&
+        sendingOrderFlag.load()) {
+        sendingOrderFlag.store(false);
+    }
+    if (currentlyPlaying && (!notYetPlayed) && (millis() - playStartTime >= 1000)) {
+        Serial.println("End unable period.");
+        ::digitalWrite(actionedButtonLedPin, LOW);
+        currentlyPlaying = false; // Reset currentlyPlaying after 1 second
+    }
+}
+
 void controlMotor(Lpf2Hub *myTrainHub, const int16_t positionSpeed,
                   const uint8_t emergencyButtonState, const uint8_t emergencyButtonLedPin,
-                  const byte motorPort) {
+                  const byte motorPort, std::atomic<bool> &sendingOrderFlag) {
     static int16_t currentSpeed = 2048;
     static bool emergencyStop = true;
+    static unsigned long lastExecutionTime = 0; // To track the last execution time
+    unsigned long currentTime = millis(); // Get the current time
+    if (!sendingOrderFlag.load()) {
+        sendingOrderFlag.store(true);
+        const int16_t actualSpeed = ::convertPotPositionToSpeed(positionSpeed);
 
-    const int16_t actualSpeed = ::convertPotPositionToSpeed(positionSpeed);
-    Serial.println("Analog reading");
-    Serial.println(positionSpeed);
-    Serial.println(actualSpeed);
+        if (emergencyStop && (actualSpeed == 0)) {
+            emergencyStop = false;
+        }
+        if ((!emergencyStop) && (!((currentSpeed == 0) && (actualSpeed == 0)))) {
+            currentSpeed = actualSpeed;
+            myTrainHub->setBasicMotorSpeed(motorPort, actualSpeed);
+        }
+        if (emergencyButtonState == LOW) {
+            // Print message to the serial monitor
+            Serial.println("Button pressed!");
+            ::digitalWrite(emergencyButtonLedPin, HIGH);
+            Serial.println("Button pressed! LED on.");
 
-    if (emergencyStop && (actualSpeed == 0)) {
-        emergencyStop = false;
-    }
-    if ((!emergencyStop) && (!((currentSpeed == 0) && (actualSpeed == 0)))) {
-        currentSpeed = actualSpeed;
-        myTrainHub->setBasicMotorSpeed(motorPort, actualSpeed);
-        ::delay(100);
-    }
-    if (emergencyButtonState == LOW) {
-        // Print message to the serial monitor
-        Serial.println("Button pressed!");
-        ::digitalWrite(emergencyButtonLedPin, HIGH);
-        Serial.println("Button pressed! LED on.");
+            emergencyStop = true;
 
-        emergencyStop = true;
+            ::digitalWrite(emergencyButtonLedPin, LOW);
+        }
 
-        ::digitalWrite(emergencyButtonLedPin, LOW);
-    }
-
-    if (emergencyStop) {
-        Serial.println("LED on.");
-        ::digitalWrite(emergencyButtonLedPin, HIGH);
-    } else {
-        Serial.println("LED off.");
-        ::digitalWrite(emergencyButtonLedPin, LOW);
+        if (emergencyStop) {
+            ::digitalWrite(emergencyButtonLedPin, HIGH);
+        } else {
+            ::digitalWrite(emergencyButtonLedPin, LOW);
+        }
+        sendingOrderFlag.store(false);
     }
 }
 
