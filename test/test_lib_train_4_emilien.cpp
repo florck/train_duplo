@@ -4,25 +4,25 @@
 #include <unity.h>
 #include "lib_train_4_emilien_native.h" // Include the header file
 
-void testConvertPotentiometerPositionToSpeedMax() {
-    TEST_ASSERT_EQUAL(77, convertPotentiometerPositionToSpeed(4095));
+void testconvertPotarPositionToSpeedMax() {
+    TEST_ASSERT_EQUAL(77, convertPotarPositionToSpeed(4095));
 }
 
-void testConvertPotentiometerPositionToSpeedMin() {
-    const int actual = convertPotentiometerPositionToSpeed(0);
+void testconvertPotarPositionToSpeedMin() {
+    const int actual = convertPotarPositionToSpeed(0);
     TEST_ASSERT_EQUAL(-77, actual);
 }
 
-void testConvertPotentiometerPositionToSpeedMid() {
-    TEST_ASSERT_EQUAL(0, convertPotentiometerPositionToSpeed(2047));
+void testconvertPotarPositionToSpeedMid() {
+    TEST_ASSERT_EQUAL(0, convertPotarPositionToSpeed(2047));
 }
 
 
 int runUnityTests() {
     UNITY_BEGIN();
-    RUN_TEST(testConvertPotentiometerPositionToSpeedMax);
-    RUN_TEST(testConvertPotentiometerPositionToSpeedMin);
-    RUN_TEST(testConvertPotentiometerPositionToSpeedMid);
+    RUN_TEST(testconvertPotarPositionToSpeedMax);
+    RUN_TEST(testconvertPotarPositionToSpeedMin);
+    RUN_TEST(testconvertPotarPositionToSpeedMid);
     return UNITY_END();
 }
 

@@ -4,6 +4,6 @@
 
 #ifndef LIB_TRAIN_4_EMILIEN_NATIVE_H
 #define LIB_TRAIN_4_EMILIEN_NATIVE_H
-int convertPotentiometerPositionToSpeed(int position);
+int convertPotarPositionToSpeed(int position);
 
 #endif //LIB_TRAIN_4_EMILIEN_NATIVE_H
